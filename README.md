@@ -170,8 +170,8 @@ The Continuous Integration workflow is defined in `.github/workflows/ci.yml`.
 ### Pipeline Trigger Conditions
 
 The pipeline triggers automatically on:
-- Every `push` to the `main` branch.
-- Every `pull_request` targeting the `main` branch.
+- Every `push` to any branch (`main`, feature branches).
+- Every `pull_request` targeting `main`.
 
 ### Sequential Job Dependency Flow
 
@@ -196,19 +196,26 @@ graph TD
 
 ## CI Failure Demonstration & Recovery
 
-As mandated by the assignment guidelines, the pipeline was intentionally tested against a failure scenario on an isolated feature branch:
+As mandated by the assignment guidelines, the pipeline was intentionally tested against a failure scenario on an isolated feature branch (`feature/ci-failure-demo`):
 
-1. **Failure Injection**:
-   - Created a feature branch: `test/ci-failure-demo`.
-   - Introduced an intentional syntax violation into `app/app.sh` (unclosed conditional block).
-   - Committed and pushed to trigger GitHub Actions CI.
-   - Result: The `validate` job failed immediately during `./scripts/lint.sh` (`bash -n` syntax check failed), blocking downstream `test` and `docker` stages.
-2. **Failure Resolution**:
-   - Corrected the syntax violation in `app/app.sh`.
-   - Committed the fix with commit message: `fix: resolve intentional syntax error in diagnostic script`.
-   - Pushed the update to GitHub.
-   - Result: The `validate`, `test`, and `docker` jobs all passed green in sequence.
-   - Merged the verified feature branch into `main`.
+### 1. Failure Injection
+- **Branch**: `feature/ci-failure-demo`
+- **Change**: Introduced an intentional unclosed conditional block (`if [[ ... ]]`) into `app/app.sh`.
+- **Commit**: `test: introduce intentional syntax error to demonstrate CI failure` (SHA `482f0bb`)
+- **CI Run**: [Run #36283568307](https://github.com/faruk-olawale/ci-cd-github-actions/actions/runs/36283568307)
+- **Result**: **FAILED** (Status: `completed`, Conclusion: `failure`).
+  - `validate` failed immediately during `./scripts/lint.sh` when `bash -n app/app.sh` detected the syntax error.
+  - `test` and `docker` jobs were **automatically skipped** due to `needs: validate` dependency guards.
+
+### 2. Failure Resolution & Recovery
+- **Fix**: Reverted the invalid syntax and verified `./scripts/lint.sh` passes locally.
+- **Commit**: `fix: resolve syntax error to restore successful CI execution` (SHA `388cf4e`)
+- **CI Run**: [Run #36283772299](https://github.com/faruk-olawale/ci-cd-github-actions/actions/runs/36283772299)
+- **Result**: **PASSED** (Status: `completed`, Conclusion: `success`).
+  - `validate` passed: 0 syntax or file presence errors.
+  - `test` passed: all 13 automated tests succeeded.
+  - `docker` passed: image compiled and passed all 5 container smoke tests.
+- **Merge**: Merged verified `feature/ci-failure-demo` into `main`.
 
 ---
 
