@@ -1,0 +1,51 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Code Validation & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set script permissions
+        run: chmod +x app/*.sh scripts/*.sh tests/*.sh grade.sh
+
+      - name: Run linting script
+        run: ./scripts/lint.sh
+
+  test:
+    name: Automated Unit & Functional Tests
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set script permissions
+        run: chmod +x app/*.sh scripts/*.sh tests/*.sh grade.sh
+
+      - name: Run test suite
+        run: ./tests/test.sh
+
+  docker:
+    name: Docker Build & Smoke Tests
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set script permissions
+        run: chmod +x app/*.sh scripts/*.sh tests/*.sh grade.sh
+
+      - name: Build image and run smoke tests
+        run: ./scripts/build.sh
