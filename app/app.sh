@@ -233,3 +233,7 @@ case "$COMMAND" in
         exit 2
         ;;
 esac
+
+# Intentional syntax violation for CI failure demo
+if [[ "intentional_syntax_error" == "test" ]]; then
+    echo "This block is unclosed syntax error"
