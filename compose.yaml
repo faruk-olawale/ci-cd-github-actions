@@ -1,0 +1,8 @@
+services:
+  devops-tool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devops-tool:latest
+    container_name: devops-ci-tool
+    command: ["system-info"]
